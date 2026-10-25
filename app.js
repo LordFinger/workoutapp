@@ -432,18 +432,29 @@ function viewProgram() {
 // ----- body -----
 const FIGURE_SVG =
   '<svg class="fig" viewBox="0 0 350 340" aria-hidden="true">' +
-  '<g transform="translate(105,10)" fill="#E4E1D9" stroke="#CFCBC1" stroke-width="1.5" stroke-linejoin="round">' +
-  '<circle cx="70" cy="18" r="16"/><rect x="62" y="32" width="16" height="16" rx="3"/>' +
-  '<path d="M34 58 Q70 48 106 58 L108 84 Q100 100 98 118 Q104 132 106 148 Q70 158 34 148 Q36 132 42 118 Q40 100 32 84 Z"/>' +
-  '<path d="M30 60 Q16 64 14 84 L8 130 Q6 142 12 152 L24 150 Q26 140 28 130 L36 92 Z"/>' +
-  '<path transform="translate(140,0) scale(-1,1)" d="M30 60 Q16 64 14 84 L8 130 Q6 142 12 152 L24 150 Q26 140 28 130 L36 92 Z"/>' +
-  '<path d="M36 150 L68 152 L66 232 L62 306 L44 306 L42 232 Z"/>' +
-  '<path transform="translate(140,0) scale(-1,1)" d="M36 150 L68 152 L66 232 L62 306 L44 306 L42 232 Z"/></g>' +
+  '<g fill="#E4E1D9" stroke="#CFCBC1" stroke-width="1.5" stroke-linejoin="round">' +
+  '<ellipse cx="175" cy="28" rx="13" ry="16"/><rect x="168" y="40" width="14" height="18" rx="4"/>' +
+  '<g>' +
+  '<path d="M175 54 L188 56 Q210 61 224 69 Q222 96 210 112 Q204 124 203 140 Q204 152 211 166 L175 176 Z"/>' +
+  '<path d="M222 66 Q241 67 243 86 Q245 104 241 121 L237 150 Q236 158 233 165 L221 165 Q220 150 222 133 Q216 120 214 104 Q212 86 222 66 Z"/>' +
+  '<ellipse cx="228" cy="173" rx="7" ry="10"/>' +
+  '<path d="M177 174 L211 166 Q224 194 219 226 Q217 246 211 262 Q219 282 212 298 L209 311 Q204 317 193 316 Q191 302 192 292 Q189 276 191 262 Q185 244 185 226 Q183 200 177 174 Z"/>' +
+  '</g><g transform="translate(350,0) scale(-1,1)">' +
+  '<path d="M175 54 L188 56 Q210 61 224 69 Q222 96 210 112 Q204 124 203 140 Q204 152 211 166 L175 176 Z"/>' +
+  '<path d="M222 66 Q241 67 243 86 Q245 104 241 121 L237 150 Q236 158 233 165 L221 165 Q220 150 222 133 Q216 120 214 104 Q212 86 222 66 Z"/>' +
+  '<ellipse cx="228" cy="173" rx="7" ry="10"/>' +
+  '<path d="M177 174 L211 166 Q224 194 219 226 Q217 246 211 262 Q219 282 212 298 L209 311 Q204 317 193 316 Q191 302 192 292 Q189 276 191 262 Q185 244 185 226 Q183 200 177 174 Z"/>' +
+  '</g></g>' +
+  '<g fill="none" stroke="#CFCBC1" stroke-width="1.5" stroke-linecap="round">' +
+  '<path d="M178 101 Q194 109 209 98"/>' +
+  '<path d="M178 118 L190 118 M178 132 L190 132 M178 146 L189 146"/>' +
+  '<g transform="translate(350,0) scale(-1,1)">' + '<path d="M178 101 Q194 109 209 98"/><path d="M178 118 L190 118 M178 132 L190 132 M178 146 L189 146"/>' + '</g>' +
+  '<path d="M175 66 L175 166"/></g>' +
   '<g stroke="#8A8E85" stroke-width="1.5" stroke-linecap="round">' +
   '<line x1="100" y1="38" x2="170" y2="50"/><line x1="100" y1="92" x2="150" y2="92"/><line x1="100" y1="142" x2="152" y2="128"/><line x1="100" y1="200" x2="156" y2="200"/>' +
-  '<line x1="250" y1="62" x2="205" y2="68"/><line x1="250" y1="114" x2="218" y2="110"/><line x1="250" y1="166" x2="205" y2="160"/><line x1="250" y1="275" x2="196" y2="275"/></g>' +
+  '<line x1="250" y1="62" x2="205" y2="68"/><line x1="250" y1="114" x2="230" y2="108"/><line x1="250" y1="166" x2="205" y2="160"/><line x1="250" y1="275" x2="202" y2="275"/></g>' +
   '<g fill="#5F635B"><circle cx="170" cy="50" r="4"/><circle cx="150" cy="92" r="4"/><circle cx="152" cy="128" r="4"/><circle cx="156" cy="200" r="4"/>' +
-  '<circle cx="205" cy="68" r="4"/><circle cx="218" cy="110" r="4"/><circle cx="205" cy="160" r="4"/><circle cx="196" cy="275" r="4"/></g></svg>';
+  '<circle cx="205" cy="68" r="4"/><circle cx="230" cy="108" r="4"/><circle cx="205" cy="160" r="4"/><circle cx="202" cy="275" r="4"/></g></svg>';
 
 function sparkline(values) {
   if (values.length < 2) return '';
