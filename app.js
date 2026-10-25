@@ -310,13 +310,16 @@ function videoCard(ex, name) {
   const open = ui.video === ex.id && id;
   let html = '<div class="card"><div class="swap-title">Technique video</div>';
   if (open) {
+    // Panel slides down from the top over a dimmed page; tapping the dimmed area or Close stops the video.
+    html += '<div class="vtop-backdrop" data-act="video-close"></div><div class="vtop-panel" role="dialog" aria-modal="true" aria-label="' + esc(name) + ' technique video">' +
+      '<div class="vtop-head"><span class="vtop-title">' + esc(name) + '</span><button class="link-btn" data-act="video-close">Close</button></div>';
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      html += '<div class="note">You are offline. Videos need internet; everything else works without it.</div>';
+      html += '<div class="note" style="margin:8px 16px 16px">You are offline. Videos need internet; everything else works without it.</div>';
     } else {
       html += '<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '?playsinline=1&rel=0" title="' + esc(name) + ' technique video" ' +
         'allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
     }
-    html += '<button class="swap-row" data-act="video-close"><span>Hide video</span><span>Close</span></button>';
+    html += '</div>';
   } else if (id) {
     html += '<button class="swap-row" data-act="video-open" data-ex="' + ex.id + '"><span>Watch how to do it</span><span>Play</span></button>';
   } else {
