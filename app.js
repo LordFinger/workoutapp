@@ -41,7 +41,9 @@ function defaultState() {
   return {
     v: 1,
     startDate: todayStr(),            // first day of week 1
+    program: 'ul',                    // key of PROGRAMS
     schedule: Object.assign({}, DEFAULT_SCHEDULE),
+    videos: {},                       // exercise name -> YouTube id chosen by the user
     sessionOverride: {},              // date -> session id | 'rest'
     targets: { kcal: 2100, p: 175, c: 175, f: 78 },
     workouts: {},                     // date -> { sets: {exId: [{lb,reps,done}]}, swaps: {exId: name} }
@@ -58,7 +60,8 @@ function normalize(o) {
   const s = Object.assign({}, d, o || {});
   s.targets = Object.assign({}, d.targets, (o && o.targets) || {});
   s.schedule = Object.assign({}, d.schedule, (o && o.schedule) || {});
-  ['sessionOverride', 'workouts', 'food', 'measures'].forEach((k) => { if (!s[k] || typeof s[k] !== 'object') s[k] = {}; });
+  if (!PROGRAMS[s.program]) s.program = 'ul';
+  ['sessionOverride', 'workouts', 'food', 'measures', 'videos'].forEach((k) => { if (!s[k] || typeof s[k] !== 'object') s[k] = {}; });
   ['foods', 'weights'].forEach((k) => { if (!Array.isArray(s[k])) s[k] = []; });
   return s;
 }
@@ -88,8 +91,20 @@ const ui = {
   draftCm: '',
   draftKg: '',
   nutDate: null,
-  rest: null
+  rest: null,
+  video: null                         // exercise id whose video player is open
 };
+
+// Extract a YouTube video id from a pasted link (watch, youtu.be, shorts, embed) or a bare id.
+function ytId(input) {
+  const s = String(input || '').trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  const m = s.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function videoFor(name) {
+  return S.videos[name] || VIDEOS[name] || null;
+}
 
 // ---------------------------------------------------------------------------
 // Program / date logic
@@ -270,6 +285,8 @@ function viewLog(exId) {
       '<div class="btns"><button data-act="rest-add">+15s</button><button class="light" data-act="rest-skip">Skip</button></div></div>';
   }
 
+  html += videoCard(ex, exName(d, ex));
+
   if (ex.alts && ex.alts.length) {
     html += '<div class="card"><div class="swap-title">Machine taken? Swap it</div>';
     ex.alts.forEach((a, k) => {
@@ -282,6 +299,32 @@ function viewLog(exId) {
   html += next
     ? '<a class="btn cta" href="#/log/' + next.id + '">Next exercise</a>'
     : '<a class="btn cta" href="#/today">Finish workout</a>';
+  html += '</div>';
+  return html;
+}
+
+// Technique video: the player loads only when opened (it needs internet; the rest of the app does not).
+function videoCard(ex, name) {
+  const id = videoFor(name);
+  const search = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(name + ' proper form');
+  const open = ui.video === ex.id && id;
+  let html = '<div class="card"><div class="swap-title">Technique video</div>';
+  if (open) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      html += '<div class="note">You are offline. Videos need internet; everything else works without it.</div>';
+    } else {
+      html += '<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/' + id + '?playsinline=1&rel=0" title="' + esc(name) + ' technique video" ' +
+        'allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+    }
+    html += '<button class="swap-row" data-act="video-close"><span>Hide video</span><span>Close</span></button>';
+  } else if (id) {
+    html += '<button class="swap-row" data-act="video-open" data-ex="' + ex.id + '"><span>Watch how to do it</span><span>Play</span></button>';
+  } else {
+    html += '<div class="note">No video saved for this exercise yet.</div>';
+  }
+  if (id) html += '<a class="swap-row" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener"><span>Open in YouTube</span><span>Open</span></a>';
+  html += '<a class="swap-row" href="' + esc(search) + '" target="_blank" rel="noopener"><span>Search YouTube for this exercise</span><span>Search</span></a>' +
+    '<button class="swap-row" data-act="video-edit" data-ex="' + ex.id + '"><span>' + (S.videos[name] ? 'Change my video link' : 'Use my own video link') + '</span><span>Edit</span></button>';
   html += '</div>';
   return html;
 }
@@ -341,7 +384,10 @@ function viewNutrition() {
 function viewProgram() {
   const wk = weekInfo();
   const d = todayStr();
-  let html = '<div class="screen"><div class="head"><div class="eyebrow">Upper / Lower · 4 days a week</div><h1 class="title">Program</h1></div>';
+  const prog = PROGRAMS[S.program] || PROGRAMS.ul;
+  let html = '<div class="screen"><div class="head"><div class="eyebrow">' + esc(prog.name) + ' · ' + esc(prog.sub) + '</div><h1 class="title">Program</h1></div>';
+  html += '<div class="seg">' + Object.keys(PROGRAMS).map((k) =>
+    '<button data-act="set-program" data-id="' + k + '" aria-pressed="' + (S.program === k) + '">' + esc(PROGRAMS[k].name) + '<br><span style="font-size:12px;font-weight:500">' + esc(PROGRAMS[k].sub) + '</span></button>').join('') + '</div>';
   html += '<ul class="weeks" aria-label="Weeks of the cycle">';
   for (let w = 1; w <= CYCLE_WEEKS; w++) {
     const deload = w >= 7;
@@ -364,6 +410,10 @@ function viewProgram() {
       (s ? '</button>' : '</div>');
   });
   html += '</div>';
+
+  html += '<div class="section-label">Extra routines</div><div class="card flush">' +
+    '<button class="row" style="width:100%;border:none;background:#fff;text-align:left" data-act="view-session" data-id="rehab">' +
+    '<span class="grow" style="font-weight:600">' + esc(SESSIONS.rehab.name) + '</span><span class="meta">' + esc(SESSIONS.rehab.focus) + '</span></button></div>';
 
   html += '<div class="card"><label class="field" for="start-date" style="margin-top:0">Week 1 starts on</label>' +
     '<input class="input" type="date" id="start-date" value="' + esc(S.startDate) + '" data-change="start-date"></div>';
@@ -714,6 +764,7 @@ const actions = {
         if (prev && prev.lb !== '') r.lb = prev.lb;
       }
       r.done = true;
+      ui.video = null;
       if (k < rows.length - 1) startRest(found.ex); else ui.rest = null;
     } else {
       r.done = false;
@@ -778,7 +829,36 @@ const actions = {
   'view-session': (el) => {
     const s = SESSIONS[el.dataset.id];
     openSheet(s.name, '<div class="subtitle" style="font-size:15px">' + esc(s.focus) + '</div><ul class="ex-list">' +
-      s.exercises.map((e) => '<li><span>' + esc(e.name) + '</span><span>' + e.sets + ' × ' + esc(e.reps) + (e.unit === 'sec' ? ' s' : '') + '</span></li>').join('') + '</ul>');
+      s.exercises.map((e) => '<li><span>' + esc(e.name) + '</span><span>' + e.sets + ' × ' + esc(e.reps) + (e.unit === 'sec' ? ' s' : '') + '</span></li>').join('') + '</ul>' +
+      '<button class="btn cta" data-act="use-today" data-id="' + el.dataset.id + '">Do this session today</button>');
+  },
+  'use-today': (el) => {
+    if (!SESSIONS[el.dataset.id]) return;
+    S.sessionOverride[todayStr()] = el.dataset.id;
+    save();
+    closeSheet();
+    location.hash = '#/today';
+    render();
+  },
+  'set-program': (el) => {
+    const p = PROGRAMS[el.dataset.id];
+    if (!p || S.program === el.dataset.id) return;
+    S.program = el.dataset.id;
+    S.schedule = Object.assign({}, p.schedule);
+    save();
+    toast(p.name + ' schedule applied');
+    render();
+  },
+  'video-open': (el) => { ui.video = el.dataset.ex; render(); },
+  'video-close': () => { ui.video = null; render(); },
+  'video-edit': (el) => {
+    const found = findEx(el.dataset.ex);
+    if (!found) return;
+    const name = exName(todayStr(), found.ex);
+    openSheet('Video for ' + name, '<form data-form="video-link" data-name="' + esc(name) + '" autocomplete="off">' +
+      '<label class="field" for="v-link">YouTube link</label><input class="input" id="v-link" name="link" inputmode="url" placeholder="https://youtu.be/..." value="' + esc(S.videos[name] ? 'https://youtu.be/' + S.videos[name] : '') + '">' +
+      '<div class="note" style="margin-top:6px">Paste a link from YouTube (Share → Copy link). Leave empty to go back to the built-in video.</div>' +
+      '<button class="btn cta" type="submit">Save</button></form>');
   },
   'export': () => { exportBackup(); },
   'wipe': () => {
@@ -896,6 +976,19 @@ document.addEventListener('submit', (e) => {
     save();
     closeSheet();
     render();
+  } else if (kind === 'video-link') {
+    const raw = form.elements.link.value.trim();
+    const name = form.dataset.name;
+    if (!raw) {
+      delete S.videos[name];
+    } else {
+      const id = ytId(raw);
+      if (!id) { toast('That does not look like a YouTube link'); return; }
+      S.videos[name] = id;
+    }
+    save();
+    closeSheet();
+    render();
   } else if (kind === 'targets') {
     ['kcal', 'p', 'c', 'f'].forEach((k) => { const v = val(k); if (v !== null && v > 0) S.targets[k] = v; });
     save();
@@ -904,7 +997,7 @@ document.addEventListener('submit', (e) => {
   }
 });
 
-window.addEventListener('hashchange', () => { closeSheet(); render(); });
+window.addEventListener('hashchange', () => { closeSheet(); ui.video = null; render(); });
 
 // ---------------------------------------------------------------------------
 // Start

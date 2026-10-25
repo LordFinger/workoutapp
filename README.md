@@ -19,6 +19,8 @@ https://app.netlify.com/drop) or GitHub Pages.
 - `manifest.webmanifest`, `icons/`, `fonts/`: home-screen install assets
 
 ## Units
+Each exercise screen has a technique video (YouTube, needs internet only for the video). Program tab: switch between Upper/Lower and Full body, and open the Shoulder care routine.
+
 Exercise weights are in lb, body weight in kg, measurements in cm.
 
 ## Backups
