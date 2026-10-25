@@ -1,7 +1,7 @@
 'use strict';
 // Service worker: precaches the whole app so it opens and works with no internet.
 // Bump CACHE_VERSION whenever any app file changes so phones pick up the update.
-const CACHE_VERSION = 'gymtracker-v3';
+const CACHE_VERSION = 'gymtracker-v4';
 const PRECACHE = [
   './',
   './index.html',
